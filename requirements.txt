@@ -1,0 +1,7 @@
+yt-dlp
+google-genai
+pandas
+pydantic
+datasets
+python-dotenv
+pyarrow
