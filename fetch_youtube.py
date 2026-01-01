@@ -9,16 +9,11 @@ def fetch_latest_playlist_videos(playlist_url, count=700):
     """
     抓取整個播放清單的影片。
     """
-    # 使用 ios/android 客戶端模擬行動裝置，較不容易被標記為機器人
+    # 移除行動裝置模擬，因為它會導致部分影片格式讀取失敗
     ydl_opts_flat = {
         'extract_flat': True,
         'quiet': True,
         'playlist_items': f'1-{count}',
-        'extractor_args': {
-            'youtube': {
-                'player_client': ['ios', 'android', 'web']
-            }
-        }
     }
     
     # 關鍵：如果本地有 cookies.txt，就在第一階段讀取清單時也使用它
@@ -61,11 +56,6 @@ def fetch_latest_playlist_videos(playlist_url, count=700):
                     ydl_opts_video = {
                         'quiet': True,
                         'no_warnings': True,
-                        'extractor_args': {
-                            'youtube': {
-                                'player_client': ['ios', 'android']
-                            }
-                        }
                     }
                     if os.path.exists('cookies.txt'):
                         ydl_opts_video['cookiefile'] = 'cookies.txt'
