@@ -28,7 +28,13 @@ jobs:
         run: make sync
 
       - name: Fetch latest videos from YouTube
-        run: make fetch
+        env:
+          YOUTUBE_COOKIES: ${{ secrets.YOUTUBE_COOKIES }}
+        run: |
+          if [ -n "$YOUTUBE_COOKIES" ]; then
+            echo "$YOUTUBE_COOKIES" > cookies.txt
+          fi
+          make fetch
 
       - name: Analyze new videos with Gemini
         env:
