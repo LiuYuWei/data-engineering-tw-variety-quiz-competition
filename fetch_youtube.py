@@ -20,6 +20,11 @@ def fetch_latest_playlist_videos(playlist_url, count=700):
             }
         }
     }
+    
+    # 關鍵：如果本地有 cookies.txt，就在第一階段讀取清單時也使用它
+    if os.path.exists('cookies.txt'):
+        print("偵測到 cookies.txt，將使用 Cookie 進行認證...")
+        ydl_opts_flat['cookiefile'] = 'cookies.txt'
 
     videos = []
     with yt_dlp.YoutubeDL(ydl_opts_flat) as ydl:
@@ -62,6 +67,8 @@ def fetch_latest_playlist_videos(playlist_url, count=700):
                             }
                         }
                     }
+                    if os.path.exists('cookies.txt'):
+                        ydl_opts_video['cookiefile'] = 'cookies.txt'
                     
                     try:
                         print(f"進度: {i}/{total_found} - 正在抓取: {video_id}")
