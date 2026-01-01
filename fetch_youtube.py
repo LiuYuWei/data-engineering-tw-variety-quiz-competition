@@ -2,17 +2,23 @@ import yt_dlp
 import csv
 import os
 import time
+import random
 from datetime import datetime
 
 def fetch_latest_playlist_videos(playlist_url, count=700):
     """
     抓取整個播放清單的影片。
     """
+    # 使用 ios/android 客戶端模擬行動裝置，較不容易被標記為機器人
     ydl_opts_flat = {
         'extract_flat': True,
         'quiet': True,
-        # 不指定項數或指定一個很大的範圍來抓取全部
         'playlist_items': f'1-{count}',
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['ios', 'android', 'web']
+            }
+        }
     }
 
     videos = []
@@ -25,24 +31,40 @@ def fetch_latest_playlist_videos(playlist_url, count=700):
                 total_found = len(entries)
                 print(f"找到共 {total_found} 個項目。開始逐一提取詳細資訊...")
                 
+                # 先讀取已有的 ID 以避免重複抓取詳細資訊，減少請求次數
+                existing_ids = set()
+                if os.path.exists('latest_videos.csv'):
+                    try:
+                        with open('latest_videos.csv', 'r', encoding='utf-8-sig') as f:
+                            reader = csv.DictReader(f)
+                            for row in reader:
+                                existing_ids.add(row['id'])
+                    except Exception:
+                        pass
+
                 for i, entry in enumerate(entries, 1):
                     if not entry:
                         continue
                     
                     video_id = entry.get('id')
+                    if video_id in existing_ids:
+                        continue
+
                     video_url = f"https://www.youtube.com/watch?v={video_id}"
                     
                     # 抓取詳細資訊
                     ydl_opts_video = {
                         'quiet': True,
                         'no_warnings': True,
+                        'extractor_args': {
+                            'youtube': {
+                                'player_client': ['ios', 'android']
+                            }
+                        }
                     }
                     
                     try:
-                        # 這裡我們稍微顯示一下進度
-                        if i % 10 == 0:
-                            print(f"進度: {i}/{total_found}...")
-
+                        print(f"進度: {i}/{total_found} - 正在抓取: {video_id}")
                         with yt_dlp.YoutubeDL(ydl_opts_video) as ydl_v:
                             v_info = ydl_v.extract_info(video_url, download=False)
                             
@@ -65,12 +87,13 @@ def fetch_latest_playlist_videos(playlist_url, count=700):
                                 'id': video_id,
                                 'uploader': v_info.get('uploader'),
                             })
-                    except Exception:
+                            
+                            # 隨機休息 1~3 秒模擬真人行為
+                            time.sleep(random.uniform(1, 3))
+
+                    except Exception as e:
+                        print(f"抓取影片 {video_id} 失敗: {e}")
                         continue
-                    
-                    # 為了避免被 YouTube 暫時封鎖，每 50 部影片可以稍微喘口氣（選用）
-                    # if i % 50 == 0:
-                    #     time.sleep(1)
 
         except Exception as e:
             print(f"播放清單抓取錯誤: {e}")
