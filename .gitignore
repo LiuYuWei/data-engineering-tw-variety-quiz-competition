@@ -32,6 +32,7 @@ ENV/
 # Project specific
 *.csv
 processed_links.txt
+.github/
 *.log
 .DS_Store
 
